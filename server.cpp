@@ -12,6 +12,7 @@
 #include <poll.h>
 #include "server.hpp"
 #include "st_reactor.hpp"
+#include <pthread.h>
 
 handler_t listener_handler(int fd) {}
 handler_t client_handler(int fd) {}
@@ -68,17 +69,32 @@ int main()
         printf("-listening...\n");
     }
 
-    // create a reactor object.
-    // call the function addFd, give it the listener socket and a listener_handler function.
-    // startReactor()
-    // waitFor()
-
     // // initialize the socket for communicating with the Sender.
     // int client_socket; // the socket
     // socklen_t addr_size = sizeof(new_addr);
     // client_socket = accept(receiver_socket, (struct sockaddr *)&new_addr, &addr_size); // the func return socket descriptor of a new
     // // socket and information of the Sender like IP and Port into new_addr.
     //---------------------------------------------------------------------------------
+
+    
+    st_reactor reactor;
+    void *reactorPtr = reactor.createReactor();
+
+    // Start the reactor thread
+    reactor.startReactor(reactorPtr);
+
+    // Run some other code in the main thread
+    // ...
+
+    // Wait for the reactor thread to complete
+    pthread_t mainThread = pthread_self();
+    void *mainThreadPtr = static_cast<void *>(&mainThread);
+    reactor.WaitFor(mainThreadPtr);
+
+    // create a reactor object.
+    // call the function addFd, give it the listener socket and a listener_handler function.
+    // startReactor()
+    // waitFor()
 
     return 0;
 }

@@ -34,11 +34,14 @@ void st_reactor::theThreadFunc(void *reactor)
     // This is where you can perform the reactor's functionality
     st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
 
-    // Example code: Just printing a message
-    printf("Thread function is running\n");
-
-    // You can add your reactor logic here
-    // Remember to handle events, dispatch handlers, etc.
+    // Example code: Loop and print a message
+    while (true)
+    {
+        printf("Thread function is running\n");
+        // Add your reactor logic here
+        // Remember to handle events, dispatch handlers, etc.
+        sleep(1); // Delay for 1 second
+    }
 }
 
 void *st_reactor::threadRunner(void *reactor)
@@ -68,4 +71,6 @@ void st_reactor::WaitFor(void *freeze_main)
 {
     // Implementation for waiting in the main thread
     // You can leave this for now
+    pthread_t *mainThread = static_cast<pthread_t *>(freeze_main);
+    pthread_join(*mainThread, NULL);
 }
