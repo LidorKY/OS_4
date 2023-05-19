@@ -13,15 +13,18 @@
 #include "server.hpp"
 #include "st_reactor.hpp"
 #include <pthread.h>
+#include "dlfcn.h"
+#include <string.h>
+#include "stdio.h"
+#include "errno.h"
+#include "stdlib.h"
+#include "unistd.h"
 
 handler_t listener_handler(int fd) {}
 handler_t client_handler(int fd) {}
 
 int main()
 {
-
-    // add here load dynamic library -> just copy it from the code we have already written by ourselves.
-
     int receiver_socket;
     receiver_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (receiver_socket == -1)
@@ -76,7 +79,6 @@ int main()
     // // socket and information of the Sender like IP and Port into new_addr.
     //---------------------------------------------------------------------------------
 
-    
     st_reactor reactor;
     void *reactorPtr = reactor.createReactor();
 
