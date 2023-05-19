@@ -34,5 +34,4 @@ public:
     void WaitFor(void *freeze_main);
     void theThreadFunc(void *reactor);
     static void *threadRunner(void *reactor);
-    void *threadRunnerWrapper(void *reactor);
 };
