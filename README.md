@@ -2,12 +2,14 @@
 
 
 server: 
+
   creates communication (without accept)
   creates reactor object
   starts the reactors object
   freezes the main (and now only the reacroe's thread is running)
 
 st_reactor:
+
   has the reactor object
   has a vector for the struct of pfd's (reminder: to use poll you need to define a struct that will contain all the fd's)
   has a hashtable (the first place is for the listener socket of the server in case more people want to jion to the server and its
@@ -23,6 +25,8 @@ st_reactor:
                    if we have got more then 0 bytes then call client_handler and it will just print the message that the client
                    sent to the server. (don't need to do everything else, just print).
   threadRunner -> initialize the thread (there is nothing to touch there).
+  
+  
   
   
 maybe need to fix the makefile so it will run the dynamic library we are compiling 
