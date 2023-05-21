@@ -13,7 +13,11 @@
 #include <pthread.h>
 #include "st_reactor.hpp"
 
-st_reactor::st_reactor() {}
+st_reactor::st_reactor()
+{
+    // Initialize any data members of the reactor class
+    // ...
+}
 
 void *st_reactor::createReactor()
 {
@@ -37,7 +41,7 @@ void st_reactor::theThreadFunc(void *reactor)
     // Example code: Loop and print a message
     while (true)
     {
-        printf("Thread function is running\n");
+        printf("Thread function is \n");
         // Add your reactor logic here
         // Remember to handle events, dispatch handlers, etc.
         sleep(1); // Delay for 1 second
@@ -56,6 +60,14 @@ void st_reactor::startReactor(void *reactor)
     // Create a new thread and execute the thread function
     pthread_t thread;
     pthread_create(&thread, NULL, &st_reactor::threadRunner, reactor);
+    printf("Reactor thread started\n");
+    while (true)
+    {
+        printf("Thread function is running\n");
+        // Add your reactor logic here
+        // Remember to handle events, dispatch handlers, etc.
+        sleep(1); // Delay for 1 second
+    }
 }
 
 void st_reactor::addFd(void *reactor, int fd, handler_t handler)
@@ -73,4 +85,5 @@ void st_reactor::WaitFor(void *freeze_main)
     // You can leave this for now
     pthread_t *mainThread = static_cast<pthread_t *>(freeze_main);
     pthread_join(*mainThread, NULL);
+    printf("Main function is resumed\n");
 }

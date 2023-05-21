@@ -19,10 +19,10 @@
 #include "errno.h"
 #include "stdlib.h"
 #include "unistd.h"
+#include <thread>
 
 handler_t listener_handler(int fd) {}
 handler_t client_handler(int fd) {}
-
 int main()
 {
     int receiver_socket;
@@ -92,11 +92,6 @@ int main()
     pthread_t mainThread = pthread_self();
     void *mainThreadPtr = static_cast<void *>(&mainThread);
     reactor.WaitFor(mainThreadPtr);
-
-    // create a reactor object.
-    // call the function addFd, give it the listener socket and a listener_handler function.
-    // startReactor()
-    // waitFor()
 
     return 0;
 }
