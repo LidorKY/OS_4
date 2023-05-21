@@ -37,11 +37,3 @@ st_reactor:
                    sent to the server. (don't need to do everything else, just print).
 									 
   threadRunner -> initialize the thread (there is nothing to touch there).
-  
-  
-  
-  
-maybe need to fix the makefile so it will run the dynamic library we are compiling 
-for example: gcc-o blabla react_server.o ./reactlib.so ->must use the ./reactlib.so
-notice: since we work with c++ we need to compile it like c++
-  
