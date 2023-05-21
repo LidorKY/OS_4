@@ -16,12 +16,15 @@
 #include <unordered_map>
 #include <vector>
 #include "server.hpp"
+#include <thread>
+#include <pthread.h>
 
 using namespace std;
 
 class st_reactor
 {
 private:
+    pthread_t myThread;
     unordered_map<int, handler_t> myHashTable;
     vector<int> myVector;
 

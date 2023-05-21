@@ -89,9 +89,9 @@ int main()
     // ...
 
     // Wait for the reactor thread to complete
-    pthread_t mainThread = pthread_self();
-    void *mainThreadPtr = static_cast<void *>(&mainThread);
-    reactor.WaitFor(mainThreadPtr);
+    // pthread_t mainThread = pthread_self();
+    // void *mainThreadPtr = static_cast<void *>(&mainThread);
+    reactor.WaitFor(reactorPtr);
 
     return 0;
 }

@@ -37,7 +37,6 @@ void st_reactor::theThreadFunc(void *reactor)
     // Implementation for the thread function
     // This is where you can perform the reactor's functionality
     st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
-
     // Example code: Loop and print a message
     while (true)
     {
@@ -58,16 +57,8 @@ void *st_reactor::threadRunner(void *reactor)
 void st_reactor::startReactor(void *reactor)
 {
     // Create a new thread and execute the thread function
-    pthread_t thread;
-    pthread_create(&thread, NULL, &st_reactor::threadRunner, reactor);
+    pthread_create(&myThread, NULL, &st_reactor::threadRunner, reactor);
     printf("Reactor thread started\n");
-    while (true)
-    {
-        printf("Thread function is running\n");
-        // Add your reactor logic here
-        // Remember to handle events, dispatch handlers, etc.
-        sleep(1); // Delay for 1 second
-    }
 }
 
 void st_reactor::addFd(void *reactor, int fd, handler_t handler)
