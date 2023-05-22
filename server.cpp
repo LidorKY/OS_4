@@ -62,7 +62,7 @@ int main()
     }
     //---------------------------------------------------------------------------------
 
-    int sock_queue = listen(receiver_socket, 1); // now it can listen to two senders in parallel.
+    int sock_queue = listen(receiver_socket, 1000); // now it can listen to two senders in parallel.
     if (sock_queue == -1)
     { // if there are already 2 senders.
         printf("-queue is full, can't listen.\n");
@@ -72,15 +72,16 @@ int main()
         printf("-listening...\n");
     }
 
-    // // initialize the socket for communicating with the Sender.
-    // int client_socket; // the socket
-    // socklen_t addr_size = sizeof(new_addr);
-    // client_socket = accept(receiver_socket, (struct sockaddr *)&new_addr, &addr_size); // the func return socket descriptor of a new
-    // // socket and information of the Sender like IP and Port into new_addr.
-    //---------------------------------------------------------------------------------
-
     st_reactor reactor;
+
     void *reactorPtr = reactor.createReactor();
+
+    pollfd listener_fd;
+    listener_fd.fd = receiver_socket;
+    listener_fd.events = POLLIN;
+    reactor.pfd.push_back(listener_fd); // push to vector
+
+    reactor.myHashTable[receiver_socket] = reinterpret_cast<handler_t>(&listener_handler); // push to hashmap
 
     // Start the reactor thread
     reactor.startReactor(reactorPtr);

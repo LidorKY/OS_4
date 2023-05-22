@@ -26,10 +26,11 @@ class st_reactor
 {
 private:
     pthread_t myThread;
+
+public:
     unordered_map<int, handler_t> myHashTable;
     vector<pollfd> pfd;
 
-public:
     st_reactor();
     void *createReactor();
     void stopReactor(void *reactor);
