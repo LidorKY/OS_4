@@ -21,7 +21,8 @@ st_reactor::st_reactor()
 
 void *st_reactor::createReactor()
 {
-    this->myVector.clear();
+    // this->myVector.clear();
+    this->pfd.clear();
     this->myHashTable.clear();
     return this;
 }
@@ -34,8 +35,6 @@ void st_reactor::stopReactor(void *reactor)
 
 void st_reactor::theThreadFunc(void *reactor)
 {
-    // Implementation for the thread function
-    // This is where you can perform the reactor's functionality
     st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
     // Example code: Loop and print a message
     while (true)
