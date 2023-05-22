@@ -18,7 +18,8 @@
 #include <thread>
 #include <pthread.h>
 #include <poll.h>
-#include "server.hpp"
+// #include "server.hpp"
+typedef void (*handler_t)(int fd);
 
 using namespace std;
 
@@ -26,6 +27,7 @@ class st_reactor
 {
 private:
     pthread_t myThread;
+    bool stopFlag;
 
 public:
     unordered_map<int, handler_t> myHashTable;
@@ -35,8 +37,8 @@ public:
     void *createReactor();
     void stopReactor(void *reactor);
     void startReactor(void *reactor);
-    void addFd(void *reactor, int fd, handler_t handler);
     void WaitFor(void *freeze_main);
     void theThreadFunc(void *reactor);
     static void *threadRunner(void *reactor);
+    void addFd(void *reactor, int fd, handler_t handler);
 };

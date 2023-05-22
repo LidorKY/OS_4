@@ -15,7 +15,25 @@
 #include "functional"
 
 handler_t listener_handler(int fd) {}
-handler_t client_handler(int fd) {}
+handler_t client_handler(int fd)
+{
+    char buffer[1024];
+    bzero(buffer, 1024);
+    ssize_t received = recv(fd, buffer, 1024, 0);
+    if (received < 0)
+    {
+        perror("error in receive");
+    }
+    else if (received == 0)
+    {
+        close(fd);
+    }
+    else if (received > 0)
+    {
+
+        printf("%s", buffer);
+    }
+}
 st_reactor::st_reactor() {}
 
 void *st_reactor::createReactor()
@@ -27,8 +45,19 @@ void *st_reactor::createReactor()
 
 void st_reactor::stopReactor(void *reactor)
 {
-    // Implementation for stopping the reactor
-    // You can leave this for now
+    st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
+
+    // Check if the reactor thread is running
+    if (!reactorObj->stopFlag)
+    {
+        reactorObj->stopFlag = true;
+        pthread_join(reactorObj->myThread, NULL);
+        printf("Reactor stopped\n");
+    }
+    else
+    {
+        printf("Reactor thread is not running\n");
+    }
 }
 
 void st_reactor::theThreadFunc(void *reactor)
@@ -41,7 +70,6 @@ void st_reactor::theThreadFunc(void *reactor)
         {
             perror("error in poll\n");
         }
-
         for (int i = 0; i < this->pfd.size(); i++)
         {
             if (this->pfd[i].revents & POLLIN)
@@ -57,12 +85,8 @@ void st_reactor::theThreadFunc(void *reactor)
                     pollfd listener_fd;
                     listener_fd.fd = client_socket;
                     listener_fd.events = POLLIN;
-                    this->pfd.push_back(listener_fd);                                                  // push to vector
-                    this->myHashTable[client_socket] = reinterpret_cast<handler_t>(&listener_handler); // push to hashmap
-
-                    // additions
-                    // handler_t function = this->myHashTable[this->pfd[0].fd]; // call to listener_handler.
-                    // function(this->pfd[0].fd);
+                    this->pfd.push_back(listener_fd);                                                // push to vector
+                    this->myHashTable[client_socket] = reinterpret_cast<handler_t>(&client_handler); // push to hashmap
                 }
                 else
                 {
@@ -82,8 +106,6 @@ void st_reactor::theThreadFunc(void *reactor)
 
                         printf("%s", buffer);
                     }
-                    // handler_t function = this->myHashTable[this->pfd[i].fd]; // call to listener_handler.
-                    // function(this->pfd[i].fd);
                 }
             }
         }
@@ -99,6 +121,7 @@ void *st_reactor::threadRunner(void *reactor)
 void st_reactor::startReactor(void *reactor)
 {
     pthread_create(&myThread, NULL, &st_reactor::threadRunner, reactor);
+    this->stopFlag = false;
 }
 
 void st_reactor::addFd(void *reactor, int fd, handler_t handler)
