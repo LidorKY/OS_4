@@ -62,7 +62,7 @@ int main()
     }
     //---------------------------------------------------------------------------------
 
-    int sock_queue = listen(receiver_socket, 1000); // now it can listen to two senders in parallel.
+    int sock_queue = listen(receiver_socket, SOMAXCONN); // now it can listen to two senders in parallel.
     if (sock_queue == -1)
     { // if there are already 2 senders.
         printf("-queue is full, can't listen.\n");
@@ -83,15 +83,7 @@ int main()
 
     reactor.myHashTable[receiver_socket] = reinterpret_cast<handler_t>(&listener_handler); // push to hashmap
 
-    // Start the reactor thread
-    reactor.startReactor(reactorPtr);
-
-    // Run some other code in the main thread
-    // ...
-
-    // Wait for the reactor thread to complete
-    // pthread_t mainThread = pthread_self();
-    // void *mainThreadPtr = static_cast<void *>(&mainThread);
+    reactor.startReactor(reactorPtr); // Start the reactor thread
     reactor.WaitFor(reactorPtr);
 
     return 0;
