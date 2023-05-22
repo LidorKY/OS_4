@@ -10,7 +10,6 @@
 #include <netinet/tcp.h>
 #include <time.h>
 #include <poll.h>
-#include "server.hpp"
 #include "st_reactor.hpp"
 #include <pthread.h>
 #include "dlfcn.h"
@@ -20,6 +19,7 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include <thread>
+#include "server.hpp"
 
 handler_t listener_handler(int fd) {}
 handler_t client_handler(int fd) {}

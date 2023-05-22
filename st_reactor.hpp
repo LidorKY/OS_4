@@ -15,10 +15,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "server.hpp"
 #include <thread>
 #include <pthread.h>
 #include <poll.h>
+#include "server.hpp"
 
 using namespace std;
 

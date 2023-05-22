@@ -12,15 +12,11 @@
 #include <poll.h>
 #include <pthread.h>
 #include "st_reactor.hpp"
-#include "server.hpp"
+#include "functional"
+
 handler_t listener_handler(int fd) {}
 handler_t client_handler(int fd) {}
-
-st_reactor::st_reactor()
-{
-    // Initialize any data members of the reactor class
-    // ...
-}
+st_reactor::st_reactor() {}
 
 void *st_reactor::createReactor()
 {
@@ -38,7 +34,6 @@ void st_reactor::stopReactor(void *reactor)
 void st_reactor::theThreadFunc(void *reactor)
 {
     st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
-    char buffer[1024];
     while (true)
     {
         int poll_count = poll(this->pfd.data(), this->pfd.size(), -1);
@@ -64,12 +59,31 @@ void st_reactor::theThreadFunc(void *reactor)
                     listener_fd.events = POLLIN;
                     this->pfd.push_back(listener_fd);                                                  // push to vector
                     this->myHashTable[client_socket] = reinterpret_cast<handler_t>(&listener_handler); // push to hashmap
+
+                    // additions
+                    // handler_t function = this->myHashTable[this->pfd[0].fd]; // call to listener_handler.
+                    // function(this->pfd[0].fd);
                 }
                 else
                 {
+                    char buffer[1024];
                     bzero(buffer, 1024);
                     ssize_t received = recv(this->pfd[i].fd, buffer, 1024, 0);
-                    printf("%s", buffer);
+                    if (received < 0)
+                    {
+                        perror("error in receive");
+                    }
+                    else if (received == 0)
+                    {
+                        close(this->pfd[i].fd);
+                    }
+                    else if (received > 0)
+                    {
+
+                        printf("%s", buffer);
+                    }
+                    // handler_t function = this->myHashTable[this->pfd[i].fd]; // call to listener_handler.
+                    // function(this->pfd[i].fd);
                 }
             }
         }
@@ -90,8 +104,19 @@ void st_reactor::startReactor(void *reactor)
 void st_reactor::addFd(void *reactor, int fd, handler_t handler)
 {
     st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
-
-    // Add your implementation here
+    struct sockaddr_in new_addr;
+    socklen_t addr_size = sizeof(new_addr);
+    int client_socket = accept(fd, (struct sockaddr *)&new_addr, &addr_size);
+    if (client_socket < 0)
+    {
+        perror("error in accept");
+        return;
+    }
+    pollfd listener_fd;
+    listener_fd.fd = client_socket;
+    listener_fd.events = POLLIN;
+    this->pfd.push_back(listener_fd);           // Push to vector
+    this->myHashTable[client_socket] = handler; // Push to hashmap
 }
 
 void st_reactor::WaitFor(void *freeze_main)
