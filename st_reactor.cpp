@@ -1,5 +1,10 @@
 #include "st_reactor.hpp"
 #include <poll.h>
+#include <algorithm>  // For std::remove_if
+#include <errno.h>    // For errno
+#include <mutex>      // For std::lock_guard, std::mutex
+#include <sys/stat.h> // For fstat
+
 using namespace std;
 
 st_reactor::st_reactor()
@@ -42,14 +47,44 @@ void st_reactor::waitFor(st_reactor* reactor)
     // Wait for the reactor thread to finish
     pthread_join(reactor->reactorThread.native_handle(), NULL);
 }
+
+void st_reactor::updateFds(vector<pollfd>& pollfds)
+{
+    // Lock the mutex to ensure thread-safety
+    std::lock_guard<std::mutex> lock(mutex);
+
+    // Remove any closed file descriptors from the pollfds vector
+    pollfds.erase(std::remove_if(pollfds.begin(), pollfds.end(), [this](const pollfd& pfd) {
+        return std::find(fds.begin(), fds.end(), pfd.fd) == fds.end();
+    }), pollfds.end());
+
+    // Add any new file descriptors from the fds vector to the pollfds vector
+    for (int fd : fds)
+    {
+        auto it = std::find_if(pollfds.begin(), pollfds.end(), [fd](const pollfd& pfd) {
+            return pfd.fd == fd;
+        });
+
+        if (it == pollfds.end())
+        {
+            pollfd pfd;
+            pfd.fd = fd;
+            pfd.events = POLLIN;
+            pfd.revents = 0;
+            pollfds.push_back(pfd);
+        }
+    }
+}
+
+
 void st_reactor::reactorLoop(st_reactor* reactor)
 {
     cout << "in reactorLoop" << endl;
+    vector<pollfd> pollfds(reactor->fds.size());
     while (true)
     {
         cout << "1" << endl;
         // Perform the poll operation on the file descriptors
-        vector<pollfd> pollfds(reactor->fds.size());
 
         for (size_t i = 0; i < reactor->fds.size(); i++)
         {
@@ -66,9 +101,11 @@ void st_reactor::reactorLoop(st_reactor* reactor)
             break;
         }
         cout << "4" << endl;
+        int count = 0;
         // Check for events on the file descriptors
         for (const auto& pollfd : pollfds)
         {
+            cout << "Iter = " << ++count << endl;
             int fd = pollfd.fd;
 
             if (pollfd.revents & POLLIN)
@@ -84,5 +121,9 @@ void st_reactor::reactorLoop(st_reactor* reactor)
             }
         }
         cout << "5" << endl;
+
+        // Update the reactor's file descriptors after each iteration
+        reactor->updateFds(pollfds);
     }
 }
+
