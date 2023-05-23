@@ -1,102 +1,83 @@
-#include "stdio.h"
-#include "sys/types.h"
-#include "sys/socket.h"
-#include "sys/stat.h"
-#include "string.h"
-#include "arpa/inet.h"
-#include "stdlib.h"
-#include "unistd.h"
-#include "netinet/in.h"
-#include "netinet/tcp.h"
-#include <time.h>
-#include <poll.h>
-#include <pthread.h>
 #include "st_reactor.hpp"
-#include "server.hpp"
-handler_t listener_handler(int fd) {}
-handler_t client_handler(int fd) {}
+#include <poll.h>
+using namespace std;
 
 st_reactor::st_reactor()
 {
-    // Initialize any data members of the reactor class
-    // ...
+    fds = vector<int>();
+    hashmap = unordered_map<int, handler_t>();
 }
-
+st_reactor::~st_reactor()
+{
+    if (this != nullptr)
+    {
+        stopReactor(this);
+        delete this;
+    }
+}
 void *st_reactor::createReactor()
 {
-    this->pfd.clear();
-    this->myHashTable.clear();
-    return this;
+    st_reactor reactor; // Remove the parentheses or use braces
+    return &reactor;
 }
 
-void st_reactor::stopReactor(void *reactor)
+void st_reactor::stopReactor(st_reactor *reactor)
 {
-    // Implementation for stopping the reactor
-    // You can leave this for now
+    delete &reactor->fds;
+    delete &reactor->hashmap;
+}
+void st_reactor::startReactor(st_reactor *reactor)
+{
+    reactorThread = thread(&st_reactor::reactorLoop, reactor);//create a thread and excute it.
 }
 
-void st_reactor::theThreadFunc(void *reactor)
+void st_reactor::addFd(int fd, handler_t handler)
 {
-    st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
-    char buffer[1024];
+    hashmap.emplace(fd,handler);
+}
+void st_reactor::waitFor(st_reactor* reactor)
+{
+    // Wait for the reactor thread to finish
+    pthread_join(reactor->reactorThread.native_handle(), NULL);
+}
+void st_reactor::reactorLoop(st_reactor* reactor)
+{
     while (true)
     {
-        int poll_count = poll(this->pfd.data(), this->pfd.size(), -1);
-        if (poll_count == -1)
+        // Perform the poll operation on the file descriptors
+        vector<pollfd> pollfds(reactor->fds.size());
+
+        for (size_t i = 0; i < reactor->fds.size(); i++)
         {
-            perror("error in poll\n");
+            pollfds[i].fd = reactor->fds[i];
+            pollfds[i].events = POLLIN;
+            pollfds[i].revents = 0;
         }
 
-        for (int i = 0; i < this->pfd.size(); i++)
+        int numReady = poll(pollfds.data(), pollfds.size(), -1);
+
+        if (numReady == -1)
         {
-            if (this->pfd[i].revents & POLLIN)
+            perror("poll");
+            break;
+        }
+
+        // Check for events on the file descriptors
+        for (const auto& pollfd : pollfds)
+        {
+            int fd = pollfd.fd;
+
+            if (pollfd.revents & POLLIN)
             {
-                if (i == 0)
+                // Find the corresponding handler for the file descriptor
+                auto it = reactor->hashmap.find(fd);
+                if (it != reactor->hashmap.end())
                 {
-                    // initialize the socket for communicating with the Sender.
-                    struct sockaddr_in new_addr;
-                    int client_socket; // the socket
-                    socklen_t addr_size = sizeof(new_addr);
-                    client_socket = accept(this->pfd[0].fd, (struct sockaddr *)&new_addr, &addr_size); // the func return socket descriptor of a new
-                                                                                                       // socket and information of the Sender like IP and Port into new_addr.
-                    pollfd listener_fd;
-                    listener_fd.fd = client_socket;
-                    listener_fd.events = POLLIN;
-                    this->pfd.push_back(listener_fd);                                                  // push to vector
-                    this->myHashTable[client_socket] = reinterpret_cast<handler_t>(&listener_handler); // push to hashmap
-                }
-                else
-                {
-                    bzero(buffer, 1024);
-                    ssize_t received = recv(this->pfd[i].fd, buffer, 1024, 0);
-                    printf("%s", buffer);
+                    handler_t handler = it->second;
+                    // Call the handler function
+                    handler(fd);
                 }
             }
         }
     }
-}
-
-void *st_reactor::threadRunner(void *reactor)
-{
-    static_cast<st_reactor *>(reactor)->theThreadFunc(reactor);
-    return NULL;
-}
-
-void st_reactor::startReactor(void *reactor)
-{
-    pthread_create(&myThread, NULL, &st_reactor::threadRunner, reactor);
-}
-
-void st_reactor::addFd(void *reactor, int fd, handler_t handler)
-{
-    st_reactor *reactorObj = static_cast<st_reactor *>(reactor);
-
-    // Add your implementation here
-}
-
-void st_reactor::WaitFor(void *freeze_main)
-{
-    pthread_t *mainThread = static_cast<pthread_t *>(freeze_main);
-    pthread_join(*mainThread, NULL);
-    printf("Main function is resumed\n");
 }
