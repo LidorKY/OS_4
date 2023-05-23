@@ -1,9 +1,10 @@
-#pragma once
+
 #include <iostream>
 #include <unordered_map>
-#include "server.hpp"
 #include <vector>
 #include <thread>
+
+typedef void (*handler_t)(int fd);
 
 using namespace std;
 

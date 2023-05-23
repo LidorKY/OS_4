@@ -9,41 +9,45 @@ st_reactor::st_reactor()
 }
 st_reactor::~st_reactor()
 {
-    if (this != nullptr)
-    {
-        stopReactor(this);
-        delete this;
-    }
+    stopReactor(this);
 }
-void *st_reactor::createReactor()
+void* st_reactor::createReactor()
 {
-    st_reactor reactor; // Remove the parentheses or use braces
-    return &reactor;
+    cout << "in createReactor" << endl;
+    st_reactor* reactor = new st_reactor;
+    return reactor;
 }
 
-void st_reactor::stopReactor(st_reactor *reactor)
+void st_reactor::stopReactor(st_reactor* reactor)
 {
-    delete &reactor->fds;
-    delete &reactor->hashmap;
+    delete reactor;
 }
-void st_reactor::startReactor(st_reactor *reactor)
+void st_reactor::startReactor(st_reactor* reactor)
 {
-    reactorThread = thread(&st_reactor::reactorLoop, reactor);//create a thread and excute it.
+    cout << "in startReactor" << endl;
+    reactorThread = thread([reactor]() {
+        reactor->reactorLoop(reactor);
+    });
 }
 
 void st_reactor::addFd(int fd, handler_t handler)
 {
+    cout << "in addFd" << endl;
+    fds.emplace_back(fd);
     hashmap.emplace(fd,handler);
 }
 void st_reactor::waitFor(st_reactor* reactor)
 {
+    cout << "in waitFor" << endl;
     // Wait for the reactor thread to finish
     pthread_join(reactor->reactorThread.native_handle(), NULL);
 }
 void st_reactor::reactorLoop(st_reactor* reactor)
 {
+    cout << "in reactorLoop" << endl;
     while (true)
     {
+        cout << "1" << endl;
         // Perform the poll operation on the file descriptors
         vector<pollfd> pollfds(reactor->fds.size());
 
@@ -53,15 +57,15 @@ void st_reactor::reactorLoop(st_reactor* reactor)
             pollfds[i].events = POLLIN;
             pollfds[i].revents = 0;
         }
-
+        cout << "2" << endl;
         int numReady = poll(pollfds.data(), pollfds.size(), -1);
-
+        cout << "3" << endl;
         if (numReady == -1)
         {
             perror("poll");
             break;
         }
-
+        cout << "4" << endl;
         // Check for events on the file descriptors
         for (const auto& pollfd : pollfds)
         {
@@ -79,5 +83,6 @@ void st_reactor::reactorLoop(st_reactor* reactor)
                 }
             }
         }
+        cout << "5" << endl;
     }
 }
